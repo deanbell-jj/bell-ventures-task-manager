@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Bell Ventures Task Manager</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">📋 BV Tasks</div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-section="overview">
+          <span class="icon">📊</span>
+          <span class="label">Overview</span>
+        </a>
+        <a href="#" class="nav-item" data-section="tasks">
+          <span class="icon">✓</span>
+          <span class="label">All Tasks</span>
+        </a>
+        <a href="#" class="nav-item" data-section="create">
+          <span class="icon">➕</span>
+          <span class="label">New Task</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="btn-secondary" id="logoutBtn">Logout</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="header">
+        <div class="header-left">
+          <h1 id="pageTitle">Overview</h1>
+          <p id="pageSubtitle" class="subtitle">Welcome back!</p>
+        </div>
+        <div class="header-right">
+          <div class="user-menu">
+            <button class="btn-profile" id="profileBtn">
+              <span id="userInitials">--</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div class="content-area">
+        <section id="overview" class="section active">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon">📋</div>
+              <div class="stat-content">
+                <p class="stat-label">Total Tasks</p>
+                <p class="stat-value" id="totalTasks">0</p>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">⏳</div>
+              <div class="stat-content">
+                <p class="stat-label">Pending</p>
+                <p class="stat-value" id="pendingCount">0</p>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">🔄</div>
+              <div class="stat-content">
+                <p class="stat-label">In Progress</p>
+                <p class="stat-value" id="inProgressCount">0</p>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">✅</div>
+              <div class="stat-content">
+                <p class="stat-label">Completed</p>
+                <p class="stat-value" id="completedCount">0</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="recent-tasks">
+            <h2>Recent Tasks</h2>
+            <div id="recentTasksList" class="tasks-list">
+              <p class="empty-state">No tasks yet. Create one to get started!</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="tasks" class="section">
+          <div class="section-header">
+            <h2>All Tasks</h2>
+          </div>
+
+          <div id="tasksList" class="tasks-list">
+            <p class="empty-state">No tasks found</p>
+          </div>
+        </section>
+
+        <section id="create" class="section">
+          <div class="form-container">
+            <h2>Create New Task</h2>
+            <form id="createTaskForm" class="task-form">
+              <div class="form-group">
+                <label for="taskTitle">Task Title *</label>
+                <input type="text" id="taskTitle" name="title" required placeholder="What needs to be done?">
+              </div>
+
+              <div class="form-group">
+                <label for="taskDescription">Description</label>
+                <textarea id="taskDescription" name="description" placeholder="Add details" rows="4"></textarea>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="taskPriority">Priority</label>
+                  <select id="taskPriority" name="priority">
+                    <option value="low">Low</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="taskDueDate">Due Date</label>
+                  <input type="date" id="taskDueDate" name="due_date">
+                </div>
+              </div>
+
+              <button type="submit" class="btn-primary">Create Task</button>
+            </form>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const API_BASE = '/api';
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+    if (!token) {
+      window.location.href = '/login.html';
+    }
+
+    document.getElementById('userInitials').textContent = (user.name || 'User').charAt(0).toUpperCase();
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+    document.getElementById('profileBtn').addEventListener('click', logout);
+
+    function logout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login.html';
+    }
+
+    async function loadTasks() {
+      try {
+        const response = await fetch(`${API_BASE}/tasks`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          displayTasks(data.tasks);
+          loadStats();
+        }
+      } catch (error) {
+        console.error('Error loading tasks:', error);
+      }
+    }
+
+    function displayTasks(tasks) {
+      const tasksList = document.getElementById('tasksList');
+      if (!tasks || tasks.length === 0) {
+        tasksList.innerHTML = '<p class="empty-state">No tasks found. Create one to get started!</p>';
+        return;
+      }
+
+      tasksList.innerHTML = tasks.map(task => `
+        <div class="task-item">
+          <div class="task-content">
+            <p class="task-title">${task.title}</p>
+            <p class="task-description">${task.description || 'No description'}</p>
+            <div class="task-meta">
+              <span>${task.priority || 'medium'}</span>
+              ${task.due_date ? `<span>${new Date(task.due_date).toLocaleDateString()}</span>` : ''}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function loadStats() {
+      try {
+        const response = await fetch(`${API_BASE}/tasks/stats/summary`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          document.getElementById('totalTasks').textContent = data.stats.total_tasks;
+          document.getElementById('pendingCount').textContent = data.stats.pending;
+          document.getElementById('inProgressCount').textContent = data.stats.in_progress;
+          document.getElementById('completedCount').textContent = data.stats.completed;
+        }
+      } catch (error) {
+        console.error('Error loading stats:', error);
+      }
+    }
+
+    document.getElementById('createTaskForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const title = document.getElementById('taskTitle').value;
+      const description = document.getElementById('taskDescription').value;
+      const priority = document.getElementById('taskPriority').value;
+      const due_date = document.getElementById('taskDueDate').value;
+
+      try {
+        const response = await fetch(`${API_BASE}/tasks`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ title, description, priority, due_date })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          document.getElementById('createTaskForm').reset();
+          loadTasks();
+        }
+      } catch (error) {
+        console.error('Error creating task:', error);
+      }
+    });
+
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+        const section = item.dataset.section;
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        item.classList.add('active');
+        document.getElementById(section).classList.add('active');
+        document.getElementById('pageTitle').textContent = item.querySelector('.label').textContent;
+      });
+    });
+
+    loadTasks();
+    setInterval(loadTasks, 30000);
+  </script>
+</body>
+</html>

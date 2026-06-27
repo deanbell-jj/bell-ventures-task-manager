@@ -1,0 +1,22 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /task-manager/
+  
+  # Don't rewrite actual files or directories
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  
+  # Proxy to Node.js app on port 3000
+  RewriteRule ^(.*)$ http://localhost:3000/$1 [P,L]
+</IfModule>
+
+<IfModule mod_proxy.c>
+  ProxyPreserveHost On
+  ProxyPassReverse / http://localhost:3000/
+</IfModule>
+
+# Allow public files (CSS, JS, HTML, images)
+<FilesMatch "\.(html|css|js|jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf|eot)$">
+  Deny from none
+  Allow from all
+</FilesMatch>
