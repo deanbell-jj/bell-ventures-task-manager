@@ -131,4 +131,12 @@ Press Ctrl+C to stop the server
   `);
 });
 
+// DEBUG: Log env vars on startup
+console.log('DEBUG - Environment Variables Loaded:');
+console.log('  PORT:', process.env.PORT || '(not set)');
+console.log('  SUPABASE_URL:', process.env.SUPABASE_URL ? '✓ SET' : '❌ MISSING');
+console.log('  SUPABASE_ANON_KEY:', process.env.SUPABASE_ANON_KEY ? '✓ SET' : '❌ MISSING');
+console.log('  JWT_SECRET:', process.env.JWT_SECRET ? '✓ SET' : '❌ MISSING');
+console.log('  NODE_ENV:', process.env.NODE_ENV || '(not set)');
+
 module.exports = app;
