@@ -1,0 +1,29 @@
+app = "bell-ventures-task-manager"
+primary_region = "lhr"
+
+[build]
+  builder = "paketobuildpacks"
+
+[env]
+  NODE_ENV = "production"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  processes = ["app"]
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 256
+
+[checks]
+  [checks.alive]
+    type = "http"
+    interval = "10s"
+    timeout = "5s"
+    grace_period = "5s"
+    method = "GET"
+    path = "/health"
