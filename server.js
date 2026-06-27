@@ -13,9 +13,9 @@ const cors = require('cors');
 const helmet = require('helmet');
 const path = require('path');
 
-// Import routes
-const authRoutes = require('./routes/auth');
-const taskRoutes = require('./routes/tasks');
+// Import routes - TEMPORARILY COMMENTED OUT FOR DEBUGGING
+// const authRoutes = require('./routes/auth');
+// const taskRoutes = require('./routes/tasks');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -148,11 +148,11 @@ app.get('/api/test', (req, res) => {
   });
 });
 
-// Authentication routes
-app.use('/api/auth', authRoutes);
+// Authentication routes - TEMPORARILY DISABLED FOR DEBUGGING
+// app.use('/api/auth', authRoutes);
 
-// Task routes (all protected)
-app.use('/api/tasks', taskRoutes);
+// Task routes (all protected) - TEMPORARILY DISABLED FOR DEBUGGING
+// app.use('/api/tasks', taskRoutes);
 
 // ============================================================
 // Error Handling
